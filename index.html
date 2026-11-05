@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Made by mohammed</title>
+    <!-- استدعاء ملف الـ CSS الخارجي -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="container">
+    <h1>محاكي حدسية كولاتز</h1>
+    <p>🙃🙃Made by mohammed hamada</p>  
+    
+    <div class="input-group">
+        <input type="number" id="numberInput" placeholder="أدخل رقماً" min="1" value="6">
+        <button onclick="startSimulation()">بدء المحاكاة</button>
+    </div>
+
+    <div class="controls">
+        <button id="prevBtn" onclick="prevStep()" disabled>← الخطوة السابقة</button>
+        <button id="nextBtn" onclick="nextStep()" disabled>الخطوة التالية →</button>
+    </div>
+
+    <!-- خط الأعداد البصري -->
+    <div class="number-line-container" id="lineContainer">
+        <div class="axis"></div>
+        <div class="marker" id="marker" style="left: 50%;">
+            <div class="marker-dot"></div>
+            <div class="marker-label" id="markerLabel">-</div>
+        </div>
+    </div>
+
+    <div class="info-panel" id="infoPanel">
+        قم بإدخال رقم واضغط على زر "بدء المحاكاة" للبدء
+    </div>
+
+    <div class="steps-history" id="historyBox">
+        <strong>سجل الخطوات:</strong>
+        <div id="historyContent" style="color: var(--text-muted); margin-top: 5px;">لا توجد خطوات حتى الآن.</div>
+    </div>
+</div>
+
+<script>
+    let sequence = [];
+    let currentIndex = 0;
+
+    function startSimulation() {
+        const inputVal = parseInt(document.getElementById('numberInput').value);
+        if (isNaN(inputVal) || inputVal <= 0) {
+            alert("الرجاء إدخال رقم صحيح أكبر من الصفر.");
+            return;
+        }
+
+        // حساب سلسلة كولاتز
+        sequence = [inputVal];
+        let n = inputVal;
+        while (n !== 1) {
+            if (n % 2 === 0) {
+                n = n / 2;
+            } else {
+                n = 3 * n + 1;
+            }
+            sequence.push(n);
+        }
+
+        currentIndex = 0;
+        updateView();
+        
+        document.getElementById('prevBtn').disabled = false;
+        document.getElementById('nextBtn').disabled = false;
+    }
+
+    function updateView() {
+        const currentVal = sequence[currentIndex];
+        const minVal = Math.min(...sequence);
+        const maxVal = Math.max(...sequence);
+        
+        // حساب موضع المؤشر على خط الأعداد كنسبة مئوية (من 5% إلى 95%)
+        let percentage = 50;
+        if (maxVal !== minVal) {
+            percentage = 5 + ((currentVal - minVal) / (maxVal - minVal)) * 90;
+        }
+
+        // تحديث مكان النقطة
+        const marker = document.getElementById('marker');
+        marker.style.left = percentage + '%';
+        document.getElementById('markerLabel').innerText = currentVal;
+
+        // تحديث لوحة المعلومات
+        document.getElementById('infoPanel').innerHTML = `
+            الخطوة <strong>${currentIndex + 1}</strong> من إجمالي <strong>${sequence.length}</strong> خطوات<br>
+            الرقم الحالي: <span style="color: var(--accent-blue); font-weight: bold; font-size: 20px;">${currentVal}</span> 
+            <br><span style="font-size: 15px; color: var(--text-muted);">(${currentVal % 2 === 0 ? 'زوجي ← قُسِم على 2' : 'فردي ← ضُرب في 3 وأُضيف له 1'})</span>
+        `;
+
+        // تحديث السجل النصي
+        let historyHtml = sequence.map((num, idx) => {
+            if (idx === currentIndex) {
+                return `<span class="current-step-highlight">${num}</span>`;
+            }
+            return `<span style="color: var(--text-muted);">${num}</span>`;
+        }).join(' <span style="color: #334155;">→</span> ');
+        
+        document.getElementById('historyContent').innerHTML = historyHtml;
+
+        // تفعيل/تعطيل أزرار التنقل
+        document.getElementById('prevBtn').disabled = (currentIndex === 0);
+        document.getElementById('nextBtn').disabled = (currentIndex === sequence.length - 1);
+    }
+
+    function nextStep() {
+        if (currentIndex < sequence.length - 1) {
+            currentIndex++;
+            updateView();
+        }
+    }
+
+    function prevStep() {
+        if (currentIndex > 0) {
+            currentIndex--;
+            updateView();
+        }
+    }
+</script>
+
+</body>
+</html>
